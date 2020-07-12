@@ -19,12 +19,16 @@ import sys
 import cv2
 import time
 
+
+
 # Hiperparametros
 IM_WIDTH = 640 
 IM_HEIGHT = 480
 SERVER = 'localhost'
 PORT = 2000
-FOV = 120 #grados
+FOV = 90 #grados
+GREEN = 'Green'
+
 
 class SimpleEnviroment:
 
@@ -50,7 +54,7 @@ class SimpleEnviroment:
         img = np.array( data.raw_data )
         img = img.reshape( (IM_HEIGHT, IM_WIDTH, 4) )
         img = img[:, :, :3]
-        self.front_camera = img/255.0
+        self.front_camera = img
 
     def collision_processing( self, event ):
         self.collisions.append( event )
@@ -93,9 +97,26 @@ class SimpleEnviroment:
         self.start_episode = time.time()
         self.vehicle.apply_control( carla.VehicleControl( throttle=0.0, brake=0.0 ) )
 
+
+
         return self.front_camera
 
+    def compute_reward(self):
+        reward = 0
+
+        speed = self.get_velocity()
+        traffic_light = str( self.vehicle.get_traffic_light_state() )
+
+        if traffic_light != GREEN and speed != 0:
+            reward = -100
+        elif traffic_light == GREEN and speed >=0 and speed <= 40:
+            reward = 30
+        else:
+            reward = -500
+
+        return reward, traffic_light
     def step( self, action ):
-        reward = 2 
+        
+        reward, traffic_light = self.compute_reward()
         done = True
-        return self.front_camera, reward, done, None
+        return self.front_camera, reward, done, traffic_light
