@@ -23,7 +23,7 @@ rewards_data = open( './data.txt', 'w' )
 enviroment.vehicle.set_autopilot( True )
 semaforos = []
 
-minutes = 3
+minutes = 1
 
 t = np.linspace( 0, 60 * minutes, 20 * 60 * minutes )
 

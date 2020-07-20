@@ -37,7 +37,8 @@ class SimpleEnviroment:
     def __init__(self, model):
         self.client = carla.Client( SERVER, PORT )
         self.client.set_timeout( 5.0 )
-
+        print( self.client.get_available_maps() )
+        self.client.load_world( '/Game/Carla/Maps/Town02' )
         self.world = self.client.get_world()
         self.blueprint_library = self.world.get_blueprint_library()
 
@@ -93,10 +94,7 @@ class SimpleEnviroment:
         self.collision = self.world.spawn_actor( collision_blueprint, spawn_point, attach_to=self.vehicle )
         self.collision.listen( lambda event: self.collision_processing( event ) )
 
-        #Line invade
-        line_invade_blueprint = self.blueprint_library.find( 'sensor.other.lane_invasion' )
-        self.line_invade = self.world.spawn_actor( line_invade_blueprint, spawn_point, attach_to=self.vehicle )
-        self.line_invade.listen( lambda data: self.line_invade_processing( data ) )
+      
 
         self.actors.append( self.collision )
         
@@ -121,11 +119,15 @@ class SimpleEnviroment:
 
         traffic_light = str( self.vehicle.get_traffic_light_state() )
 
-        if traffic_light != GREEN and speed != 0:
+        waypoint = self.world.get_map().get_waypoint(self.vehicle.get_location(),project_to_road=True, lane_type=( carla.LaneType.Driving ))
+        h = waypoint.next( 10.0 )
+
+        print( [ h[0].is_junction ])
+        if traffic_light != GREEN and h[0].is_junction and speed != 0:
             reward = -100
         elif traffic_light != GREEN and speed == 0:
             reward = 30
-        elif traffic_light == GREEN and speed >=0 and speed <= speed_limit:
+        elif traffic_light == GREEN and speed >=speed_limit/3 and speed <= speed_limit:
             reward = 30
         else:
             reward = -500
@@ -136,6 +138,7 @@ class SimpleEnviroment:
 
         return reward, invade
     def step( self, action ):
+        
         
         reward, traffic_light = self.compute_reward()
         done = True
