@@ -59,7 +59,12 @@ class SimpleEnviroment:
     def collision_processing( self, event ):
         self.collisions.append( event )
 
+    def line_invade_processing( self, data ):
+        print( type(data), data )
+        self.invade=True
+
     def reset( self  ):
+        self.invade =True
         self.collisions = []
         self.actors = []
 
@@ -88,6 +93,11 @@ class SimpleEnviroment:
         self.collision = self.world.spawn_actor( collision_blueprint, spawn_point, attach_to=self.vehicle )
         self.collision.listen( lambda event: self.collision_processing( event ) )
 
+        #Line invade
+        line_invade_blueprint = self.blueprint_library.find( 'sensor.other.lane_invasion' )
+        self.line_invade = self.world.spawn_actor( line_invade_blueprint, spawn_point, attach_to=self.vehicle )
+        self.line_invade.listen( lambda data: self.line_invade_processing( data ) )
+
         self.actors.append( self.collision )
         
 
@@ -98,23 +108,33 @@ class SimpleEnviroment:
         self.vehicle.apply_control( carla.VehicleControl( throttle=0.0, brake=0.0 ) )
 
 
-
+        
         return self.front_camera
 
     def compute_reward(self):
         reward = 0
 
         speed = self.get_velocity()
+
+
+        speed_limit = self.vehicle.get_speed_limit()
+
         traffic_light = str( self.vehicle.get_traffic_light_state() )
 
         if traffic_light != GREEN and speed != 0:
             reward = -100
-        elif traffic_light == GREEN and speed >=0 and speed <= 40:
+        elif traffic_light != GREEN and speed == 0:
+            reward = 30
+        elif traffic_light == GREEN and speed >=0 and speed <= speed_limit:
             reward = 30
         else:
             reward = -500
+    
+        invade = 'Si' if self.invade else 'no'
+        
 
-        return reward, traffic_light
+
+        return reward, invade
     def step( self, action ):
         
         reward, traffic_light = self.compute_reward()

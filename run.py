@@ -23,20 +23,32 @@ rewards_data = open( './data.txt', 'w' )
 enviroment.vehicle.set_autopilot( True )
 semaforos = []
 
-minutes = 5
+minutes = 3
 
 t = np.linspace( 0, 60 * minutes, 20 * 60 * minutes )
 
+map_run = enviroment.world.get_map()
+
+print( map_run.get_all_landmarks() )
+
 for i in range( 20 * 60 * minutes ):
-    data, reward, _, semaforo = enviroment.step('')
+    data, reward, _, info = enviroment.step('')
+    position = ( 30,30 )
+    data = cv2.resize( data, (640, 480))
+    cv2.putText(
+     data, #numpy array on which text is written
+     f"{ enviroment.vehicle.get_speed_limit() } - { info }", #text
+     position, #position at which writing has to start
+     cv2.FONT_HERSHEY_SIMPLEX, #font family
+     1,
+     (255, 0, 0) ) 
     out.write( data )
     rewards.append( reward )
-    rewards_data.write( semaforo + '\n')
+ 
     time.sleep( 1/20 )
+
 
 out.release()
 rewards_data.close()
 
-plt.plot( t, rewards )
-plt.show()
-plt.savefig( './rewads.png' )
+
