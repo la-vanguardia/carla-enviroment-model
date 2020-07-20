@@ -16,20 +16,18 @@ enviroment = SimpleEnviroment('model3')
 enviroment.reset()
 
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
-out = cv2.VideoWriter('output.avi',fourcc, 20.0, (640,480))
+out = cv2.VideoWriter('Outputs/output.avi',fourcc, 20.0, (640,480))
 
 rewards = []
-rewards_data = open( './data.txt', 'w' )
-enviroment.vehicle.set_autopilot( True )
-semaforos = []
 
-minutes = 1
+enviroment.vehicle.set_autopilot( True )
+
+minutes = 2
 
 t = np.linspace( 0, 60 * minutes, 20 * 60 * minutes )
 
-map_run = enviroment.world.get_map()
 
-print( map_run.get_all_landmarks() )
+
 
 for i in range( 20 * 60 * minutes ):
     data, reward, _, info = enviroment.step('')
@@ -37,7 +35,7 @@ for i in range( 20 * 60 * minutes ):
     data = cv2.resize( data, (640, 480))
     cv2.putText(
      data, #numpy array on which text is written
-     f"{ enviroment.vehicle.get_speed_limit() } - { info }", #text
+     f"{ enviroment.vehicle.get_speed_limit()} - t:{ round(-1 *info,2) }", #text
      position, #position at which writing has to start
      cv2.FONT_HERSHEY_SIMPLEX, #font family
      1,
@@ -49,6 +47,6 @@ for i in range( 20 * 60 * minutes ):
 
 
 out.release()
-rewards_data.close()
 
-
+plt.plot( rewards )
+plt.show()
