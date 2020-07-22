@@ -11,14 +11,18 @@ class StandardReward():
     VERY_GOOD = 100
     GOOD = 50
     BAD = -50
-    VERY_BAD = -100
+    VERY_BAD = -10000
 
     def __init__(self, junction_threshold):
         self.junction_threshold = junction_threshold
-        self.lane_type_detect = LaneType.Driving 
+        self.lane_type_detect = LaneType.Driving | LaneType.Sidewalk
 
-    def search_waypoint_type( self, waypoints, type ):
-        return waypoints
+    def search_waypoint_type( self, waypoints, lane_type ):
+        waypoints_filter = []
+        for waypoint in waypoints:
+            if waypoint.lane_type == lane_type:
+                waypoints_filter.append( waypoint )
+        return waypoints_filter
 
     def compute_reward( self, enviroment_map, vehicle, is_collision ):
         reward = 0

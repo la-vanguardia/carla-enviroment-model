@@ -26,7 +26,7 @@ minutes = 2
 
 t = np.linspace( 0, 60 * minutes, 20 * 60 * minutes )
 
-
+ts = [0]
 
 
 for i in range( 20 * 60 * minutes ):
@@ -42,11 +42,11 @@ for i in range( 20 * 60 * minutes ):
      (255, 0, 0) ) 
     out.write( data )
     rewards.append( reward )
- 
+    ts.append( i / 20 )
     time.sleep( 1/20 )
 
 
 out.release()
 
-plt.plot( rewards )
+plt.plot( ts ,rewards )
 plt.show()

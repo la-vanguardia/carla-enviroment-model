@@ -80,7 +80,6 @@ class SimpleEnviroment:
 
     def spawn_vehicle( self ):
         spawn_points = self.map.get_spawn_points()
-        print( spawn_points )
         spawn_point = np.random.choice( spawn_points )
         self.vehicle = self.world.spawn_actor( self.vehicle_model, spawn_point )
         self.actors.append( self.vehicle )

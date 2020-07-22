@@ -1,7 +1,9 @@
-
+#archivos particulares
+test.py
 #Extensiones
 *.png
 *.jpg
 *.avi
 #Carpetas
 /Multimedia
+/Info
