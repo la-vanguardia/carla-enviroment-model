@@ -24,25 +24,27 @@ from enviroment.sensors import cameras, collision
 from enviroment.rewards import StandardReward
 
 # Hiperparametros
-IM_WIDTH = 480 
-IM_HEIGHT = 480
+
 SERVER = 'localhost'
 PORT = 2000
 FOV = 90 #grados
 GREEN = 'Green'
-
+MAX_TIME = 60 #segundos
 
 class SimpleEnviroment:
 
 
 
-    def __init__(self, model):
+    def __init__(self, model,  im_width, im_height):
         self.client = carla.Client( SERVER, PORT )
         self.client.set_timeout( 5.0 )
         self.client.load_world( '/Game/Carla/Maps/Town02' )
         self.world = self.client.get_world()
         self.map = self.world.get_map()
         self.blueprint_library = self.world.get_blueprint_library()
+
+        self.im_width = im_width
+        self.im_height = im_height
 
         self.vehicle_model = self.blueprint_library.filter( model )[0]
         
@@ -58,16 +60,16 @@ class SimpleEnviroment:
 
     def image_processing( self, data ):
         img = np.array( data.raw_data )
-        img = img.reshape( (IM_HEIGHT, IM_WIDTH, 4) )
+        img = img.reshape( ( self.im_height, self.im_width , 4) )
         img = img[:, :, :3]
-        #img = np.reshape(img, (img.shape[2], img.shape[1], img.shape[0]))
         self.front_camera = img / 255
+        
 
     def collision_processing( self, event ):
         self.collisions.append( event )
 
     def add_camera(self):
-        camera_blueprint = cameras.create_camera_blueprint( IM_WIDTH, IM_HEIGHT, FOV, self.blueprint_library )
+        camera_blueprint = cameras.create_camera_blueprint( self.im_width, self.im_height, FOV, self.blueprint_library )
         self.camera = self.world.spawn_actor( camera_blueprint, self.sensors_spawn_points, attach_to=self.vehicle )
         self.camera.listen( lambda data: self.image_processing( data ) )
         self.actors.append( self.camera )
@@ -86,10 +88,15 @@ class SimpleEnviroment:
         self.actors.append( self.vehicle )
 
     def destroy_actors( self ):
-        self.actors = []
+        for actor in self.actors:
+            actor.destroy()
 
     def reset( self  ):
         self.destroy_actors()
+        return self.start()
+    
+    def start( self ):
+        self.actors = []
         self.collisions = []
 
         
@@ -102,13 +109,17 @@ class SimpleEnviroment:
             time.sleep( 1e-2 )
 
         self.start_episode = time.time()
-    
+
+        return self.front_camera, 0, False, None
 
     def step( self, action ):
         self.apply_action( action )
         is_collision = len( self.collisions ) > 0
         reward = self.handler_rewards.compute_reward( self.map, self.vehicle, is_collision)
+        run_time = round( time.time() - self.start_episode, 2 )
         done = True if is_collision else False
+        if run_time > MAX_TIME:
+            done = True    
         return self.front_camera, reward, done, self.start_episode - time.time()
 
     def apply_action( self, action ):

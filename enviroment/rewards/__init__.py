@@ -49,8 +49,10 @@ class StandardReward():
         
         waypoints = waypoint_handler.next( self.junction_threshold )
         driving_waypoints = self.search_waypoint_type( waypoints, LaneType.Driving )
-        is_junction = driving_waypoints[0].is_junction
-        
+        if len( driving_waypoints ) > 0:
+            is_junction = driving_waypoints[0].is_junction
+        else:
+            is_junction = False
         if (is_junction and speed == 0) or ( not is_junction and speed != 0 ):
             reward = self.GOOD
         

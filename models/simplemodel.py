@@ -3,7 +3,7 @@ import tensorflow as tf
 from models.networks.Actor import Actor 
 from models.networks.Critic import Critic
 import tensorflow_probability as tfp 
-
+from utils.action_space import Action
 import numpy as np
 tfd = tfp.distributions
 
@@ -15,11 +15,9 @@ class ActorCritic():
         self.actor = Actor( input_shape, output_shape, min_values, max_values )
         self.critic = Critic( input_shape, 1 )
         #refactorizar en 1 clase de tipo Action - para simplicar el codigo!
-        self.min_values = min_values
-        self.max_values = max_values
+        self.action = Action( [], min_values, max_values )
+
         self.X = []
-        self.Y_critic = []
-        self.Y_actor = []
         self.log_probs = []
         self.critic_predictions = []
         self.rewards = []
@@ -37,20 +35,12 @@ class ActorCritic():
         action_distribution = self.policy( obs )
         action = action_distribution.sample(1)
         log_prob = action_distribution.log_prob( action )
-        action = self.proccess_action( np.array( action[0] ) )
-        return action
+        action = np.array( action[0] )
+        self.action.set_action( action )
+        
+        return self.action.get_action()
 
-    def proccess_action( self, action ):
-        for i in range( 3 ):
-            action[i] = self._calmp( action[i], i )
-        return action
 
-    def _calmp( self, value ,index ):
-        if value < self.min_values[ index ]:
-            return self.min_values[ index ]
-        if value > self.max_values[ index ]:
-            return self.max_values[index]
-        return value
 
     def learn( self, rewards, final_obs ,done, gamma ):
         td_targets = self.calculate_n_step( rewards, final_obs, done, gamma )
