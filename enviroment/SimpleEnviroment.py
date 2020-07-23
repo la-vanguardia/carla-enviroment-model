@@ -24,7 +24,7 @@ from enviroment.sensors import cameras, collision
 from enviroment.rewards import StandardReward
 
 # Hiperparametros
-IM_WIDTH = 640 
+IM_WIDTH = 480 
 IM_HEIGHT = 480
 SERVER = 'localhost'
 PORT = 2000
@@ -60,7 +60,8 @@ class SimpleEnviroment:
         img = np.array( data.raw_data )
         img = img.reshape( (IM_HEIGHT, IM_WIDTH, 4) )
         img = img[:, :, :3]
-        self.front_camera = img
+        #img = np.reshape(img, (img.shape[2], img.shape[1], img.shape[0]))
+        self.front_camera = img / 255
 
     def collision_processing( self, event ):
         self.collisions.append( event )
@@ -103,12 +104,13 @@ class SimpleEnviroment:
         self.start_episode = time.time()
     
 
-        
-        
-
-   
     def step( self, action ):
+        self.apply_action( action )
         is_collision = len( self.collisions ) > 0
         reward = self.handler_rewards.compute_reward( self.map, self.vehicle, is_collision)
         done = True if is_collision else False
         return self.front_camera, reward, done, self.start_episode - time.time()
+
+    def apply_action( self, action ):
+        control = carla.VehicleControl( throttle=float( action[0] ), steer=float( action[1] ), brake=float( action[2] ))
+        self.vehicle.apply_control( control )
