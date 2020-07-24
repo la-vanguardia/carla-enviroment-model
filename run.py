@@ -24,7 +24,7 @@ folder_creator.recursive_folder( SAVE_PATH )
 config = os_config.system_configuration()
 
 
-actor_critic = ActorCritic( (IM_HEIGHT, IM_WIDTH, 3), 2, min_values, max_values, False ,SAVE_PATH )
+actor_critic = ActorCritic( (IM_HEIGHT, IM_WIDTH, 3), 2, min_values, max_values, True ,SAVE_PATH )
 
 enviroment = SimpleEnviroment('model3', IM_WIDTH, IM_HEIGHT, config['map'])
 fourcc = cv2.VideoWriter_fourcc(*config['codecc'])
@@ -49,20 +49,20 @@ for i in range( 1000 ):
         obs, _ ,done, _ = enviroment.start()
     else: 
         obs, _, done, _ = enviroment.reset()
-    #out = cv2.VideoWriter(f'output-{time.time()}.avi',fourcc, 20.0, (640,480))
+    out = cv2.VideoWriter(f'output-{time.time()}.avi',fourcc, 20.0, (640,480))
     
     while not done:
         action = actor_critic.get_action( obs / 255 )
         
         obs_next, reward, done, info = enviroment.step( action )
         rewards.append( reward )
-        #print_video( out, obs )
+        time.sleep( 1/20 )
+        print_video( out, obs )
         obs = obs_next
-    break
     print( i )
     actor_critic.learn( rewards, obs, done, GAMMA )
     print( 'End Learn' )
-    #out.release()
+    out.release()
 
 enviroment.destroy_actors()
 
