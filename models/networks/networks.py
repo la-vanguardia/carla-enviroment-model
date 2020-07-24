@@ -2,9 +2,10 @@ import tensorflow as tf
 from tensorflow.keras import models, layers
 from tensorflow.keras.optimizers import Adam
 import numpy as np
+
 class CNN:
 
-    def __init__(self, input_shape, output_shape, activation_function='relu', loss='mse'):
+    def __init__(self, input_shape, output_shape, activation_function='relu', loss='mse', load=False, load_path=None):
         self.model = models.Sequential()
         self.model.add( layers.Conv2D( 128, kernel_size=(3,3), activation='relu', input_shape=input_shape) )
         self.model.add( layers.MaxPool2D( (2,2) ) )
@@ -18,6 +19,8 @@ class CNN:
         self.model.add( layers.Dense( output_shape, activation=activation_function ) )
 
         self.model.compile( optimizer=Adam( learning_rate=1e-3 ), loss=loss,  metrics=["accuracy"])
+        if load and load_path:
+            self.load( load_path )
     
 
     def train( self, X, Y ):
@@ -27,10 +30,11 @@ class CNN:
         return self.model.predict(np.array(input_image).reshape((-1, *input_image.shape) ) )[0]
 
     def save(self, path):
-        pass 
+        self.model.save_weights( path )
+
 
     def load(self, path):
-        pass 
+        self.model.load_weights( path )
 
 if __name__ == "__main__":
     cnn = CNN( ( 640, 480, 3 ), 6 )

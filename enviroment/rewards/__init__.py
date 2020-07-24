@@ -2,6 +2,8 @@ import carla
 from carla import LaneType, TrafficLightState
 import numpy as np
 
+MIN_SPEED = 5
+
 
 class StandardReward():
     """
@@ -35,9 +37,9 @@ class StandardReward():
         waypoints_handler = enviroment_map.get_waypoint( location, True, self.lane_type_detect )
 
         if light_state == TrafficLightState.Red:
-            reward = self.red_light_reward( speed, waypoints_handler )
+            reward = self.red_light_reward( speed, waypoints_handler, speed_limit )
         elif light_state == TrafficLightState.Green:
-            reward = self.green_light_reward( speed )
+            reward = self.green_light_reward( speed, speed_limit )
         
         if is_collision:
             reward = self.VERY_BAD
@@ -45,7 +47,7 @@ class StandardReward():
 
         return reward
 
-    def red_light_reward( self, speed, waypoint_handler ):
+    def red_light_reward( self, speed, waypoint_handler, speed_limit ):
         
         waypoints = waypoint_handler.next( self.junction_threshold )
         driving_waypoints = self.search_waypoint_type( waypoints, LaneType.Driving )
@@ -53,14 +55,16 @@ class StandardReward():
             is_junction = driving_waypoints[0].is_junction
         else:
             is_junction = False
-        if (is_junction and speed == 0) or ( not is_junction and speed != 0 ):
-            reward = self.GOOD
+            
+        if (is_junction and speed == 0) or ( not is_junction and speed > speed_limit/2 and speed < speed_limit):
+            return self.GOOD
         
         return self.BAD
 
-    def green_light_reward( self, speed ):
-        if speed != 0:
+    def green_light_reward( self, speed, speed_limit ):
+        if speed > MIN_SPEED and speed < speed_limit:
             return self.GOOD
+
         return self.BAD
 
 def get_speed( vehicle ):

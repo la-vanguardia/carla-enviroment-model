@@ -10,7 +10,7 @@ class Action:
 
     def get_action( self ):
         self.calmps()
-        return self.action
+        return self.convert_to_action_space()
 
     def calmps( self ):
         for i in range( len( self.action ) ):
@@ -22,3 +22,16 @@ class Action:
         if value > self.max_values[ index ]:
             return self.max_values[index]
         return value
+
+    def convert_to_action_space( self ):
+        throttle = 0.0 
+        steer = float( self.action[1] ) 
+        brake = 0.0
+
+        if self.action[0] < 0:
+            brake = float( -1 * self.action[0] )
+        else: 
+            throttle = float( self.action[0] )
+
+        return [ throttle, steer, brake ]
+        

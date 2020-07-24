@@ -4,6 +4,8 @@ test.py
 *.png
 *.jpg
 *.avi
+*.txt
 #Carpetas
 /Multimedia
 /Info
+/Outputs

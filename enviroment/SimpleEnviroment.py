@@ -62,7 +62,7 @@ class SimpleEnviroment:
         img = np.array( data.raw_data )
         img = img.reshape( ( self.im_height, self.im_width , 4) )
         img = img[:, :, :3]
-        self.front_camera = img / 255
+        self.front_camera = img 
         
 
     def collision_processing( self, event ):
