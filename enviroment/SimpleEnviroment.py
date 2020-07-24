@@ -1,17 +1,3 @@
-'''
-La clase SimplreEnviroment implemente una enviroment madre sencilla 
-la cual incluye los metodos mas comunes para lograr implementar un Q-Learner. 
-
-
-El sensor base elegido sera la camara rgb, debido a su versatilidad
-
-
-
-'''
-
-#Imports
-
-import carla 
 import numpy as np
 import glob
 import os
@@ -19,6 +5,18 @@ import sys
 import cv2
 import time
 
+if os.name=='nt':
+    try:
+        sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s' % (
+            sys.version_info.major,
+            sys.version_info.minor,
+            'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+    except IndexError:
+        pass
+
+#Imports
+
+import carla 
 
 from enviroment.sensors import cameras, collision
 from enviroment.rewards import StandardReward
@@ -35,10 +33,10 @@ class SimpleEnviroment:
 
 
 
-    def __init__(self, model,  im_width, im_height):
+    def __init__(self, model,  im_width, im_height, world):
         self.client = carla.Client( SERVER, PORT )
         self.client.set_timeout( 5.0 )
-        self.client.load_world( '/Game/Carla/Maps/Town02' )
+        self.client.load_world( world )
         self.world = self.client.get_world()
         self.map = self.world.get_map()
         self.blueprint_library = self.world.get_blueprint_library()

@@ -6,7 +6,7 @@ from os.path import join
 
 class Actor(CNN):
 
-    _SAVE_NAME = 'actor'
+    _SAVE_NAME = 'actor.ckpt'
 
     def __init__(self, input_shape, output_shape, min_values, max_values, load=False, path_load=None):
         #Se utilizan el doble de parametros de salida ya que es necesario 

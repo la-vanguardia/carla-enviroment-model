@@ -4,7 +4,7 @@ from os.path import join
 
 class Critic(CNN):
     
-    _SAVE_NAME = 'critic'
+    _SAVE_NAME = 'critic.ckpt'
 
     def __init__(self, input_shape, output_shape, load=False, path_load=None):
         super( Critic, self ).__init__( input_shape, output_shape )

@@ -8,7 +8,7 @@ import numpy as np
 tfd = tfp.distributions
 
 import json
-
+from os.path import join
 
 class ActorCritic():
 
@@ -24,7 +24,7 @@ class ActorCritic():
         self.critic_predictions = []
         self.rewards = []
         self.mean_rewards = []
-        self.ephochs = 0
+        self.epochs = 0
 
         self.save_path = save_path
 
@@ -36,14 +36,19 @@ class ActorCritic():
         self.critic.save( self.save_path )
         safe_data = {
             'mean_rewards': self.mean_rewards,
-            'ephochs': self.ephochs
+            'epochs': self.epochs
         }
+        with open( join( self.save_path, self._SAFE_DATA ), 'w' ) as json_file:
+            json.dump( safe_data, json_file )
         
         
     def load( self ):
         self.actor.load( self.save_path )
         self.critic.load( self.save_path )
-        safe_data = {} #aqui cargaria mi json si tan solo sabria como...
+        with open( join( self.save_path, self._SAFE_DATA ), 'r' ) as json_file:
+            safe_data = json.load( json_file )
+        self.mean_rewards = safe_data['mean_rewards']
+        self.epochs = safe_data['epochs']
 
     def policy( self, obs ):
         self.mu, self.sigma = self.actor.predict( obs )
@@ -73,7 +78,7 @@ class ActorCritic():
 
         self.mean_rewards.append( np.mean( self.rewards ) )
 
-        self.ephochs += 1
+        self.epochs += 1
         if self.save_path:
             self.save()
         self._reset_variables()
