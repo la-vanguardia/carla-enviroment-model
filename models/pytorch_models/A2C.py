@@ -1,20 +1,25 @@
-from models.pytorch_models.Actor import Actor
-from models.pytorch_models.Critic import Critic 
-
-import torch.multiprocessing as mp
-import torch.nn.functional as F
-
 from collections import namedtuple
 import torch
 import numpy as np
+import json
 
+
+import torch.multiprocessing as mp
+import torch.nn.functional as F
 from torch.distributions.multivariate_normal import MultivariateNormal
+from os.path import join, isfile
+
+from models.pytorch_models.Actor import Actor
+from models.pytorch_models.Critic import Critic 
+
 
 Transition = namedtuple("Transition", ["s", "value_s", "a", "log_prob_a"])
 
 class ActorCritic(mp.Process):
 
-    def __init__( self, input_shape, output_shape, min_values, max_values ,load=False, save_path=None ):
+    _SAVE_FILE = 'actor-critic.json'
+
+    def __init__( self, input_shape, output_shape, min_values, max_values, save_path=None ):
         self.actor = Actor( input_shape, output_shape )
         self.critic = Critic( input_shape, 1 )
         self.output_shape = output_shape
@@ -22,6 +27,14 @@ class ActorCritic(mp.Process):
         self.max_values = max_values
 
         self.trajectory = []
+        self.epochs = 1
+        self.mean_rewards = [  ]
+
+
+        if save_path:
+            self.file_path = join( save_path, self._SAVE_FILE )
+            if isfile( self.file_path ):
+                self.load(  )
 
 
     def policy( self, obs ):
@@ -109,7 +122,7 @@ class ActorCritic(mp.Process):
             td_error = td_target - critic_prediction
             actor_losses.append(- log_p_a * td_error) # td_error es un estimador insesgado de Advantage
             critic_losses.append(F.smooth_l1_loss(critic_prediction, td_target))
-            #critic_losses.append(F.mse_loss(critic_prediction, td_target))
+            
             
 
         actor_loss = torch.stack(actor_losses).mean()
@@ -134,3 +147,30 @@ class ActorCritic(mp.Process):
         self.critic_optimizer.step()
         
         self.trajectory.clear()
+        
+        self.epochs += 1
+        self.mean_rewards.append( np.mean( rewards ) )
+
+
+
+    def save( self ):
+        safe_data = {
+            'epochs': self.epochs,
+            'mean rewards': self.mean_rewards
+        }
+
+        safe_data['critic'] = self.critic.save()
+        safe_data['actor'] = self.actor.save()
+        
+        with open( self.file_path, 'w' ) as json_file:
+            json.dump( safe_data, json_file )
+
+    def load( self ):
+        with open( self.file_path, 'r' ) as json_file:
+            safe_data = json.load( json_file )
+
+        self.mean_rewards = safe_data['mean rewards']
+        self.epochs = safe_data['epochs']
+        self.critic.load( safe_data['critic'] )
+        self.actor.load( safe_data['actor'] )
+

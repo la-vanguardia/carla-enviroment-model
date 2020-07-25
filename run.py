@@ -14,6 +14,9 @@ import cv2
 
 from models.pytorch_models.A2C import ActorCritic
 
+
+num_epochs = int( input( 'Ingrese la cantidad de iteraciones que desee implementar' ) )
+
 min_values = [-1, -1]
 max_values = [1, 1]
 
@@ -25,8 +28,9 @@ GAMMA = 0.3
 folder_creator.recursive_folder( SAVE_PATH )
 config = os_config.system_configuration()
 
+actor_critic = ActorCritic( (3, IM_HEIGHT, IM_WIDTH), 2, min_values, max_values ,SAVE_PATH )
 
-actor_critic = ActorCritic( (3, IM_HEIGHT, IM_WIDTH), 2, min_values, max_values, False ,SAVE_PATH )
+
 
 enviroment = SimpleEnviroment('model3', IM_WIDTH, IM_HEIGHT, config['map'])
 fourcc = cv2.VideoWriter_fourcc(*config['codecc'])
@@ -45,26 +49,33 @@ def print_video( writter, image ):
     (255, 255, 255) ) 
     writter.write( image )
 
-for i in range( 10 ):
+for i in range( num_epochs ):
+
+    is_saved_video = True if np.random.rand() < 1/10 else False
+
     rewards = []
     if i == 0:
         obs, _ ,done, _ = enviroment.start()
     else: 
         obs, _, done, _ = enviroment.reset()
-    out = cv2.VideoWriter(f'output-{time.time()}.avi',fourcc, 20.0, (640,480))
+
+    if is_saved_video:
+        out = cv2.VideoWriter(f'Outputs/output-{ actor_critic.epochs + 1 }.avi',fourcc, 20.0, (640,480))
     
     while not done:
         action = actor_critic.get_action( obs / 255 )
         
         obs_next, reward, done, info = enviroment.step( action )
         rewards.append( reward )
-        print_video( out, obs )
+        if is_saved_video:
+            print_video( out, obs )
         obs = obs_next
         time.sleep( 1/20 )
     print( i )
     actor_critic.learn( rewards, obs, done, GAMMA )
     print( 'End Learn' )
-    out.release()
+    if is_saved_video:
+        out.release()
 
 enviroment.destroy_actors()
 

@@ -5,13 +5,11 @@ import numpy as np
 
 class CNN( nn.Module ):
 
-    def __init__( self, input_shape, output_shape, load=False, load_path=None ):
+    def __init__( self, input_shape, output_shape ):
         super( CNN, self ).__init__()
 
         device_name = 'cuda' if torch.cuda.is_available else 'cpu'
         self.device = torch.device( device_name )
-
-        print( f'Se entrenara utilizando { self.device }' )
 
         self.layer_conv = nn.Sequential( 
             nn.Conv2d( input_shape[0], 128, 3, stride=3, padding=0 ),
@@ -34,11 +32,11 @@ class CNN( nn.Module ):
         x = self.layer_conv( x )
         return x
 
-    def save( self, path ):
-        pass 
+    def save( self ):
+        return self.state_dict()
 
-    def load( self, path ):
-        pass
+    def load( self, state_dict ):
+        self.load_state_dict( state_dict )
 
 
 cnn = CNN( (3, 480, 640), 6 )

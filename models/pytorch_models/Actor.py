@@ -2,8 +2,8 @@ from models.pytorch_models.network import CNN
 from torch import nn
 class Actor( CNN ):
 
-    def __init__( self, input_shape, output_shape, load=False, load_path=None ):
-        super( Actor, self ).__init__( input_shape, 8, load, load_path )
+    def __init__( self, input_shape, output_shape ):
+        super( Actor, self ).__init__( input_shape, 8 )
         self.mu = nn.Sequential(
             nn.Linear( 8, output_shape )
         )
