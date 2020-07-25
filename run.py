@@ -10,7 +10,9 @@ from enviroment.SimpleEnviroment import SimpleEnviroment
 
 import cv2
 
-from models.simplemodel import ActorCritic
+#from models.simplemodel import ActorCritic
+
+from models.pytorch_models.A2C import ActorCritic
 
 min_values = [-1, -1]
 max_values = [1, 1]
@@ -24,7 +26,7 @@ folder_creator.recursive_folder( SAVE_PATH )
 config = os_config.system_configuration()
 
 
-actor_critic = ActorCritic( (IM_HEIGHT, IM_WIDTH, 3), 2, min_values, max_values, True ,SAVE_PATH )
+actor_critic = ActorCritic( (3, IM_HEIGHT, IM_WIDTH), 2, min_values, max_values, False ,SAVE_PATH )
 
 enviroment = SimpleEnviroment('model3', IM_WIDTH, IM_HEIGHT, config['map'])
 fourcc = cv2.VideoWriter_fourcc(*config['codecc'])
@@ -43,7 +45,7 @@ def print_video( writter, image ):
     (255, 255, 255) ) 
     writter.write( image )
 
-for i in range( 1000 ):
+for i in range( 10 ):
     rewards = []
     if i == 0:
         obs, _ ,done, _ = enviroment.start()
@@ -56,9 +58,9 @@ for i in range( 1000 ):
         
         obs_next, reward, done, info = enviroment.step( action )
         rewards.append( reward )
-        time.sleep( 1/20 )
         print_video( out, obs )
         obs = obs_next
+        time.sleep( 1/20 )
     print( i )
     actor_critic.learn( rewards, obs, done, GAMMA )
     print( 'End Learn' )
