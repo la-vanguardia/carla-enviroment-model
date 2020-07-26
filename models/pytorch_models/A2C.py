@@ -171,7 +171,7 @@ class ActorCritic(mp.Process):
     def load( self ):
         safe_data = torch.load( self.file_path, map_location= lambda storage, loc: storage )
 
-        self.mean_rewards = []
+        self.mean_rewards = safe_data['mean rewards']
         self.epochs = safe_data['epochs']
         self.critic.load( safe_data['critic'] )
         self.actor.load( safe_data['actor'] )
