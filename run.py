@@ -52,13 +52,13 @@ def print_video( writter, image ):
 
 step_num = 0
 for i in range( num_epochs ):
-
-    time_start = time.time()
+    
     rewards = []
     if i == 0:
         obs, _ ,done, _ = enviroment.start()
     else: 
         obs, _, done, _ = enviroment.reset()
+    time_start = time.time()
 
     while not done:
         action = actor_critic.get_action( obs / 255 )
