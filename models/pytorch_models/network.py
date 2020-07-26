@@ -8,7 +8,7 @@ class CNN( nn.Module ):
     def __init__( self, input_shape, output_shape ):
         super( CNN, self ).__init__()
 
-        device_name = 'cuda' if torch.cuda.is_available else 'cpu'
+        device_name = 'cpu'
         self.device = torch.device( device_name )
 
         self.layer_conv = nn.Sequential( 

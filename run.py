@@ -15,7 +15,7 @@ import cv2
 from models.pytorch_models.A2C import ActorCritic
 
 
-num_epochs = int( input( 'Ingrese la cantidad de iteraciones que desee implementar' ) )
+num_epochs = int( input( 'Ingrese la cantidad de iteraciones que desee implementar: ' ) )
 
 min_values = [-1, -1]
 max_values = [1, 1]
@@ -32,7 +32,7 @@ actor_critic = ActorCritic( (3, IM_HEIGHT, IM_WIDTH), 2, min_values, max_values 
 
 
 
-enviroment = SimpleEnviroment('model3', IM_WIDTH, IM_HEIGHT, config['map'])
+enviroment = SimpleEnviroment('model3', IM_WIDTH, IM_HEIGHT, 'Town02')
 fourcc = cv2.VideoWriter_fourcc(*config['codecc'])
 
 
@@ -49,10 +49,12 @@ def print_video( writter, image ):
     (255, 255, 255) ) 
     writter.write( image )
 
+
+step_num = 0
+best_reward = -1 * np.inf
 for i in range( num_epochs ):
 
-    is_saved_video = True if np.random.rand() < 1/10 else False
-
+    is_saved_video = True if ( i%10 == 0 ) else False
     rewards = []
     if i == 0:
         obs, _ ,done, _ = enviroment.start()
@@ -70,12 +72,22 @@ for i in range( num_epochs ):
         if is_saved_video:
             print_video( out, obs )
         obs = obs_next
+        step_num += 1
+        if done or step_num > 20: 
+            step_num = 0
+            max_reward = max( rewards )
+            best_reward = max_reward if max_reward > best_reward else best_reward
+            actor_critic.learn( rewards, obs, done, GAMMA )
+            rewards = []
         time.sleep( 1/20 )
-    print( i )
-    actor_critic.learn( rewards, obs, done, GAMMA )
+
+    print( actor_critic.epochs )
+    
     print( 'End Learn' )
     if is_saved_video:
         out.release()
+
+print( np.max( actor_critic.mean_rewards ), max_reward )
 
 enviroment.destroy_actors()
 

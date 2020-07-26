@@ -25,7 +25,8 @@ class ActorCritic(mp.Process):
         self.output_shape = output_shape
         self.min_values = min_values
         self.max_values = max_values
-
+        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr = 0.01)
+        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr = 0.01)
         self.trajectory = []
         self.epochs = 1
         self.mean_rewards = [  ]
@@ -96,7 +97,7 @@ class ActorCritic(mp.Process):
         :param gamma: Factor de Descuento para el cálculo de la diferencia temporal.
         :return: El valor final de cada estado de los n ejecutados
         """
-        g_t_n_s = list();
+        g_t_n_s = list()
         with torch.no_grad():
             g_t_n = torch.tensor([[0]]).float() if done else self.critic(self.preprocess_obs(final_state)).cpu()
             for r_t in n_step_rewards[::-1]:
@@ -135,8 +136,7 @@ class ActorCritic(mp.Process):
     def learn(self, rewards ,n_th_observation, done, gamma):
         td_targets = self.calculate_n_step_return(rewards, n_th_observation, done, gamma)
         actor_loss, critic_loss = self.calculate_loss(self.trajectory, td_targets)
-        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr = 0.01)
-        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr = 0.01)
+      
        
         self.actor_optimizer.zero_grad()
         actor_loss.backward(retain_graph = True)
@@ -147,9 +147,11 @@ class ActorCritic(mp.Process):
         self.critic_optimizer.step()
         
         self.trajectory.clear()
-        
-        self.epochs += 1
         self.mean_rewards.append( np.mean( rewards ) )
+        if done:
+            self.epochs += 1
+            self.save()
+	
 
 
 
@@ -162,12 +164,10 @@ class ActorCritic(mp.Process):
         safe_data['critic'] = self.critic.save()
         safe_data['actor'] = self.actor.save()
         
-        with open( self.file_path, 'w' ) as json_file:
-            json.dump( safe_data, json_file )
+        torch.save( safe_data, self.file_path )
 
     def load( self ):
-        with open( self.file_path, 'r' ) as json_file:
-            safe_data = json.load( json_file )
+        safe_data = torch.load( self.file_path, map_location= lambda storage, loc: storage )
 
         self.mean_rewards = safe_data['mean rewards']
         self.epochs = safe_data['epochs']

@@ -2,7 +2,7 @@ import carla
 from carla import LaneType, TrafficLightState
 import numpy as np
 
-MIN_SPEED = 5
+MIN_SPEED = 0
 
 
 class StandardReward():
@@ -17,7 +17,7 @@ class StandardReward():
 
     def __init__(self, junction_threshold):
         self.junction_threshold = junction_threshold
-        self.lane_type_detect = LaneType.Driving | LaneType.Sidewalk
+        self.lane_type_detect = LaneType.Driving | LaneType.Sidewalk | LaneType.Shoulder
 
     def search_waypoint_type( self, waypoints, lane_type ):
         waypoints_filter = []
@@ -26,20 +26,25 @@ class StandardReward():
                 waypoints_filter.append( waypoint )
         return waypoints_filter
 
-    def compute_reward( self, enviroment_map, vehicle, is_collision ):
+    def compute_reward( self, enviroment_map, vehicle, is_collision, is_invade_lane ):
         reward = 0
         
         light_state = vehicle.get_traffic_light_state()
         speed_limit = vehicle.get_speed_limit()
         speed = get_speed( vehicle )
         location = vehicle.get_location()
+        waypoint_here = enviroment_map.get_waypoint( location, True, self.lane_type_detect )
+        is_driving = ( waypoint_here.lane_type == LaneType.Driving )
 
-        waypoints_handler = enviroment_map.get_waypoint( location, True, self.lane_type_detect )
+
+        if not is_driving or is_invade_lane:
+            return -100
+
 
         if light_state == TrafficLightState.Red:
-            reward = self.red_light_reward( speed, waypoints_handler, speed_limit )
+            reward = self.red_light_reward( speed, waypoint_here, speed_limit )
         elif light_state == TrafficLightState.Green:
-            reward = self.green_light_reward( speed, speed_limit )
+            reward = self.green_light_reward( speed, waypoint_here, speed_limit )
         
         if is_collision:
             reward = self.VERY_BAD
@@ -47,9 +52,10 @@ class StandardReward():
 
         return reward
 
-    def red_light_reward( self, speed, waypoint_handler, speed_limit ):
+    def red_light_reward( self, speed, waypoint_here, speed_limit ):
         
-        waypoints = waypoint_handler.next( self.junction_threshold )
+        waypoints = waypoint_here.next( self.junction_threshold )
+        
         driving_waypoints = self.search_waypoint_type( waypoints, LaneType.Driving )
         if len( driving_waypoints ) > 0:
             is_junction = driving_waypoints[0].is_junction
@@ -61,11 +67,12 @@ class StandardReward():
         
         return self.BAD
 
-    def green_light_reward( self, speed, speed_limit ):
+    def green_light_reward( self, speed, waypoint_here ,speed_limit ):
+
         if speed > MIN_SPEED and speed < speed_limit:
             return self.GOOD
 
-        return self.BAD
+        return -10000
 
 def get_speed( vehicle ):
         velocity = vehicle.get_velocity()
