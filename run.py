@@ -54,7 +54,7 @@ step_num = 0
 best_reward = -1 * np.inf
 for i in range( num_epochs ):
 
-    is_saved_video = True if ( i%10 == 0 ) else False
+    is_saved_video = True if ( False ) else False
     rewards = []
     if i == 0:
         obs, _ ,done, _ = enviroment.start()
