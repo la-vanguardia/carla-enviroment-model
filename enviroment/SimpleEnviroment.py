@@ -98,8 +98,9 @@ class SimpleEnviroment:
         actor_snapshot = world_snapshot.find( self.vehicle.id )
         spectator = self.world.get_spectator()
         camera_transform = actor_snapshot.get_transform()
-        camera_transform.location.z += 3
-        camera_transform.rotation.pitch = -45
+        camera_transform.location.z += 30
+
+        camera_transform.rotation.pitch = -90
         spectator.set_transform( camera_transform )
 
     def destroy_actors( self ):
@@ -150,7 +151,7 @@ class SimpleEnviroment:
         run_time = round( time.time() - self.start_episode, 2 )
         done = True if is_collision else False
 
-
+        self.lane_invade = []
 
         if run_time > MAX_TIME:
             done = True    

@@ -75,7 +75,7 @@ for i in range( num_epochs ):
         step_num += 1
         if done or step_num > 20: 
             step_num = 0
-            max_reward = max( actor_critic.mean_rewards )
+            max_reward = max( rewards )
             best_reward = max_reward if max_reward > best_reward else best_reward
             actor_critic.learn( rewards, obs, done, GAMMA )
             rewards = []
