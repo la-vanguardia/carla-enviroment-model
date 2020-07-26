@@ -39,4 +39,3 @@ class CNN( nn.Module ):
         self.load_state_dict( state_dict )
 
 
-cnn = CNN( (3, 480, 640), 6 )

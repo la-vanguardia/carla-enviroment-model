@@ -93,6 +93,15 @@ class SimpleEnviroment:
        	self.vehicle = self.world.spawn_actor( self.vehicle_model, spawn_point )
        	self.actors.append( self.vehicle )
 
+    def principal_camera_teleport_to_actor( self ):
+        world_snapshot = self.world.wait_for_tick()
+        actor_snapshot = world_snapshot.find( self.vehicle.id )
+        spectator = self.world.get_spectator()
+        camera_transform = actor_snapshot.get_transform()
+        camera_transform.location.z += 3
+        camera_transform.rotation.pitch = -45
+        spectator.set_transform( camera_transform )
+
     def destroy_actors( self ):
         for actor in self.actors:
             actor.destroy()
@@ -122,10 +131,13 @@ class SimpleEnviroment:
         self.add_collision()
         self.add_lane_invade()
 
+        self.principal_camera_teleport_to_actor()
+        
         while self.front_camera is None:
             time.sleep( 1e-2 )
 
         self.start_episode = time.time()
+
 
 
         return self.front_camera, 0, False, None

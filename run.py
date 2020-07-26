@@ -75,15 +75,14 @@ for i in range( num_epochs ):
         step_num += 1
         if done or step_num > 20: 
             step_num = 0
-            max_reward = max( rewards )
+            max_reward = max( actor_critic.mean_rewards )
             best_reward = max_reward if max_reward > best_reward else best_reward
             actor_critic.learn( rewards, obs, done, GAMMA )
             rewards = []
         time.sleep( 1/20 )
 
-    print( actor_critic.epochs )
+    print( f'Iteración terminada \nepochs: {actor_critic.epochs}\nmax reward: {max_reward}\n mean: {np.mean(actor_critic.mean_rewards)}'  )
     
-    print( 'End Learn' )
     if is_saved_video:
         out.release()
 
