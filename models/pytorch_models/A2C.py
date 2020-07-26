@@ -30,7 +30,7 @@ class ActorCritic(mp.Process):
         self.trajectory = []
         self.epochs = 1
         self.mean_rewards = [  ]
-
+        self.rewards = []
 
         if save_path:
             self.file_path = join( save_path, self._SAVE_FILE )
@@ -147,10 +147,12 @@ class ActorCritic(mp.Process):
         self.critic_optimizer.step()
         
         self.trajectory.clear()
-        self.mean_rewards.append( np.mean( rewards ) )
+        self.rewards += rewards
         if done:
             self.epochs += 1
             self.save()
+            self.mean_rewards.append( np.mean( self.rewards ) )
+            self.rewards = []
 	
 
 
@@ -169,7 +171,7 @@ class ActorCritic(mp.Process):
     def load( self ):
         safe_data = torch.load( self.file_path, map_location= lambda storage, loc: storage )
 
-        self.mean_rewards = safe_data['mean rewards']
+        self.mean_rewards = []
         self.epochs = safe_data['epochs']
         self.critic.load( safe_data['critic'] )
         self.actor.load( safe_data['actor'] )
