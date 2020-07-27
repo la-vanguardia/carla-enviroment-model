@@ -55,6 +55,7 @@ class SimpleEnviroment:
     
         #handlers
         self.handler_rewards = StandardReward( 10.0 )
+        
 
 
     def image_processing( self, data ):
@@ -91,6 +92,9 @@ class SimpleEnviroment:
         spawn_points = self.map.get_spawn_points()
        	spawn_point = np.random.choice( spawn_points )
        	self.vehicle = self.world.spawn_actor( self.vehicle_model, spawn_point )
+        control = self.vehicle.get_physics_control()
+        control.gear_switch_time = 0.0
+        self.vehicle.apply_physics_control( control )
        	self.actors.append( self.vehicle )
 
     def principal_camera_teleport_to_actor( self ):
@@ -137,6 +141,7 @@ class SimpleEnviroment:
         while self.front_camera is None:
             time.sleep( 1e-2 )
 
+
         self.start_episode = time.time()
 
 
@@ -146,8 +151,7 @@ class SimpleEnviroment:
     def step( self, action ):
         self.apply_action( action )
         is_collision = len( self.collisions ) > 0
-        is_invade_line = len( self.lane_invades ) > 0
-        reward = self.handler_rewards.compute_reward( self.map, self.vehicle, is_collision, is_invade_line)
+        reward = self.handler_rewards.compute_reward( self.map, self.vehicle, is_collision )
         run_time = round( time.time() - self.start_episode, 2 )
         done = True if is_collision else False
 
@@ -158,5 +162,5 @@ class SimpleEnviroment:
         return self.front_camera, reward, done, self.start_episode - time.time()
 
     def apply_action( self, action ):
-        control = carla.VehicleControl( throttle=float( action[0] ), steer=float( action[1] ), brake=float( action[2] ))
+        control = carla.VehicleControl( throttle=float( action[0] ), steer=float( action[1] ), brake=float( action[2] ), manual_gear_shift=True, gear=3)
         self.vehicle.apply_control( control )

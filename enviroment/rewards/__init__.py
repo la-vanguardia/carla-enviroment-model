@@ -2,7 +2,7 @@ import carla
 from carla import LaneType, TrafficLightState
 import numpy as np
 
-MIN_SPEED = 0
+MIN_SPEED = 5
 
 
 class StandardReward():
@@ -10,10 +10,10 @@ class StandardReward():
         La Clase StandardReward se encarga de computar el premio que recive el agente luego de una acción
     """
 
-    VERY_GOOD = 100
-    GOOD = 50
-    BAD = -50
-    VERY_BAD = -10000
+    VERY_GOOD = 5
+    GOOD = 1
+    BAD = -1
+    VERY_BAD = -5
 
     def __init__(self, junction_threshold):
         self.junction_threshold = junction_threshold
@@ -26,7 +26,7 @@ class StandardReward():
                 waypoints_filter.append( waypoint )
         return waypoints_filter
 
-    def compute_reward( self, enviroment_map, vehicle, is_collision, is_invade_lane ):
+    def compute_reward( self, enviroment_map, vehicle, is_collision ):
         reward = 0
         
         light_state = vehicle.get_traffic_light_state()
@@ -37,15 +37,18 @@ class StandardReward():
         is_driving = ( waypoint_here.lane_type == LaneType.Driving )
 
 
-        if not is_driving or is_invade_lane:
-            return -100
+        if not is_driving:
+            return -2
 
+        if vehicle.get_control().throttle > 0.4:
+            return self.GOOD
 
         if light_state == TrafficLightState.Red:
             reward = self.red_light_reward( speed, waypoint_here, speed_limit )
         elif light_state == TrafficLightState.Green:
-            reward = self.green_light_reward( speed, waypoint_here, speed_limit )
-        
+           reward = self.green_light_reward( speed, waypoint_here, speed_limit )
+    
+
         if is_collision:
             reward = self.VERY_BAD
 
@@ -72,7 +75,7 @@ class StandardReward():
         if speed > MIN_SPEED and speed < speed_limit:
             return self.GOOD
 
-        return -10000
+        return self.BAD
 
 def get_speed( vehicle ):
         velocity = vehicle.get_velocity()

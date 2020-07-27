@@ -26,6 +26,8 @@ class Actor(CNN):
         self.action_mu.set_action( mus )
         self.action_mu.calmps()
         sigmas = [ sigma if sigma > 0 else 1e-7 for sigma in sigmas ] 
+        sigmas = [ sigma if sigma < 1 else 1 for sigma in sigmas ]
+        print( sigmas )
         return self.action_mu.action, sigmas
 
 

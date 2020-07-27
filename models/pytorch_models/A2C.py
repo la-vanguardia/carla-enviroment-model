@@ -50,6 +50,8 @@ class ActorCritic(mp.Process):
         [mu[:,i].clamp_(float(self.min_values[i]), float(self.max_values[i])) for i in range(self.output_shape)]
 
 
+
+        print( self.sigma )
         if len(self.mu.shape) == 0: #mu es un escalar
             self.mu.unsqueeze_(0) #evitará que la multivariante noral de un error
         action_distribution = MultivariateNormal(self.mu, torch.eye(self.output_shape) * self.sigma, validate_args = True)
