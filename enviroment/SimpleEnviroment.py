@@ -5,14 +5,14 @@ import sys
 import cv2
 import time
 
-if os.name=='nt':
-    try:
-        sys.path.append(glob.glob('../../carla/dist/carla-*%d.%d-%s' % (
-            sys.version_info.major,
-            sys.version_info.minor,
-            'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-    except IndexError:
-        pass
+
+try:
+    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s' % (
+        sys.version_info.major,
+        sys.version_info.minor,
+        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+except IndexError:
+    pass
 
 #Imports
 
@@ -25,7 +25,7 @@ from enviroment.rewards import StandardReward
 
 SERVER = 'localhost'
 PORT = 2000
-FOV = 90 #grados
+FOV = 100 #grados
 MAX_TIME = 60 #segundos
 
 class SimpleEnviroment:
@@ -92,9 +92,6 @@ class SimpleEnviroment:
         spawn_points = self.map.get_spawn_points()
        	spawn_point = np.random.choice( spawn_points )
        	self.vehicle = self.world.spawn_actor( self.vehicle_model, spawn_point )
-        control = self.vehicle.get_physics_control()
-        control.gear_switch_time = 0.0
-        self.vehicle.apply_physics_control( control )
        	self.actors.append( self.vehicle )
 
     def principal_camera_teleport_to_actor( self ):
@@ -120,7 +117,7 @@ class SimpleEnviroment:
         self.collisions = []
         self.lane_invades = []
 
-        sun_altitude_angle = np.random.uniform( 0, 90 )
+        sun_altitude_angle = 70.0
 
         self.world.set_weather( carla.WeatherParameters( sun_altitude_angle=sun_altitude_angle ) )
 
@@ -151,11 +148,12 @@ class SimpleEnviroment:
     def step( self, action ):
         self.apply_action( action )
         is_collision = len( self.collisions ) > 0
+        is_invade = len(self.lane_invades)>0
         reward = self.handler_rewards.compute_reward( self.map, self.vehicle, is_collision )
         run_time = round( time.time() - self.start_episode, 2 )
         done = True if is_collision else False
 
-        self.lane_invade = []
+        
 
         if run_time > MAX_TIME:
             done = True    

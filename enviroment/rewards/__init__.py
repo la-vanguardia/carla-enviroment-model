@@ -10,10 +10,10 @@ class StandardReward():
         La Clase StandardReward se encarga de computar el premio que recive el agente luego de una acción
     """
 
-    VERY_GOOD = 5
-    GOOD = 1
-    BAD = -1
-    VERY_BAD = -5
+    VERY_GOOD = 100
+    GOOD = 10
+    BAD = -50
+    VERY_BAD = -100
 
     def __init__(self, junction_threshold):
         self.junction_threshold = junction_threshold
@@ -27,7 +27,7 @@ class StandardReward():
         return waypoints_filter
 
     def compute_reward( self, enviroment_map, vehicle, is_collision ):
-        reward = 0
+        reward = -10000
         
         light_state = vehicle.get_traffic_light_state()
         speed_limit = vehicle.get_speed_limit()
@@ -38,22 +38,38 @@ class StandardReward():
 
 
         if not is_driving:
-            return -2
+            return -100
 
-        if vehicle.get_control().throttle > 0.4:
+        if not is_driving & ( (speed>2) | (vehicle.get_control().throttle > 0.3)):
+            return -300
+       
+
+        """ if is_driving & (speed<MIN_SPEED):
+            return self.BAD """
+
+        if vehicle.get_control().throttle < 0.6:
+            return self.VERY_BAD
+        
+        if (vehicle.get_control().throttle > 0.6) & is_driving:
             return self.GOOD
 
-        if light_state == TrafficLightState.Red:
+
+        """ if light_state == TrafficLightState.Red:
             reward = self.red_light_reward( speed, waypoint_here, speed_limit )
         elif light_state == TrafficLightState.Green:
            reward = self.green_light_reward( speed, waypoint_here, speed_limit )
-    
+     """
 
         if is_collision:
-            reward = self.VERY_BAD
+            reward = -200
+
+
+        """ if is_invade:
+            reward = -200 """
 
 
         return reward
+        
 
     def red_light_reward( self, speed, waypoint_here, speed_limit ):
         
